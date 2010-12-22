@@ -217,7 +217,7 @@ Vector *Vector_Read() {
   Vector *vector;
   unsigned length;
   int i;
-  char str[1024];
+  char *s;
   Value *p;
   
   scanf("%d", &length);
@@ -227,10 +227,17 @@ Vector *Vector_Read() {
     return 0;
   }
   p = vector->p;
-  for (i=0;i<length;i++) {
-    scanf("%s",str);
-    value_read(*(p++),str);
-  }  
+  for (i=0;i<length;i++)
+	{
+		int r=scanf("%ms",&s);
+		if(r!=1)
+		{
+			errormsg1("Vector_Read", "hi, Mathematica", "scanf at line 231 failed");
+			return 0;
+		}
+		value_read(*(p++),s);
+		free(s);
+	}  
   return vector;
 } /* Vector_Read */
 

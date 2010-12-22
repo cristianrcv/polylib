@@ -160,41 +160,64 @@ void Matrix_Print(FILE *Dst, const char *Format, Matrix *Mat)
   }
 } /* Matrix_Print */
 
+/* used in Matrix_Read_Input */
+void skip_to_eol()
+{
+	while(1)
+	{
+		int r=getc(stdin);
+		if(r==EOF)
+		{
+			errormsg1("Matrix_Read,skip_to_eol()", "bad dim", "not enough data");
+			break;
+		}
+		if( (r==0) || (r==(int)'\n') )
+			break;
+	}
+}
 /* 
  * Read the contents of the Matrix 'Mat' 
+ *  spaces followed by # treated as comment
+ *  empty lines skipped
  */
-void Matrix_Read_Input(Matrix *Mat) {
-  
-  Value *p;
-  int i,j,n;
-  char *c, s[1024],str[1024];
-  
-  p = Mat->p_Init;
-  for (i=0;i<Mat->NbRows;i++) {
-    do {
-      c = fgets(s, 1024, stdin);
-      while(isspace(*c) && *c!='\n')
-	++c;
-    } while(c && (*c =='#' || *c== '\n'));
-    
-    if (!c) {
-      errormsg1( "Matrix_Read", "baddim", "not enough rows" );
-      break;
-    }
-    for (j=0;j<Mat->NbColumns;j++) {
-      if(!c || *c=='\n' || *c=='#') {
-	errormsg1("Matrix_Read", "baddim", "not enough columns");
-	break;
+void Matrix_Read_Input(Matrix *Mat) 
+{
+ int i,j,doit,numbers_wanted,cols;
+ char* s; char* c; char c0;
+ Value *p = Mat->p_Init;
+ cols=Mat->NbColumns;
+ for (i=0;i<Mat->NbRows;i++)
+  {
+   numbers_wanted=cols;
+   while(numbers_wanted)
+    {
+     int r=scanf("%ms",&s);
+     if(r!=1)
+      errormsg1("Matrix_Read", "baddim", "not enough data");
+     c=s;
+     while( (c0=*c) && isspace(c0) && (c0!='\n') )
+      ++c;
+     doit=1;
+     switch(c0)
+      {
+       case '#' :  // we only come here at start of line, for correct input
+                   assert(numbers_wanted==cols);
+                   skip_to_eol(); // no break required here
+       case  0   : ;
+       case '\n' : doit=0;
       }
-      if (sscanf(c,"%s%n",str,&n) == 0) {
-	errormsg1( "Matrix_Read", "baddim", "not enough columns" );
-	break;
+     if(doit)
+      {
+       value_read(*(p++),s);
+       //fprintf(stderr,"line %d number %s\n",i,s);
+       numbers_wanted -= 1;
       }
-      value_read(*(p++),str);
-      c += n;
+     free(s);
     }
+   skip_to_eol();
   }
 } /* Matrix_Read_Input */
+
 
 /* 
  * Read the contents of the matrix 'Mat' from standard input. 
