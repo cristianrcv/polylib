@@ -934,6 +934,15 @@ Matrix * full_dimensionize(Matrix const * M, int nbParms,
   }
   permutedEqs = mpolyhedron_permute(Eqs, permutation);
   WVL = compress_parms(permutedEqs, Eqs->NbColumns-2-Eqs->NbRows);
+  /* Check for empty WVL (no solution) */
+  if( !WVL )
+  {
+	  fprintf(stderr,"full_dimensionize > parameters compression failed.\n");
+	  Matrix_Free(Eqs);
+	  Matrix_Free(Ineqs);
+	  (*validityLattice) = Identity_Matrix(nbParms+1);
+	  return NULL;
+  }
   if (dbgCompParm) {
     printf("Whole validity lattice: ");
     show_matrix(WVL);
@@ -952,7 +961,9 @@ Matrix * full_dimensionize(Matrix const * M, int nbParms,
   }
   /* 3- eliminate the first variables */
   if (!mpolyhedron_eliminate_first_variables(permutedEqs, permutedIneqs)) {
-    fprintf(stderr,"full-dimensionize > variable elimination failed. \n"); 
+    fprintf(stderr,"full_dimensionize > variable elimination failed.\n"); 
+	 Matrix_Free(permutedIneqs);
+	 (*validityLattice) = Identity_Matrix(nbParms+1);
     return NULL;
   }
   if (dbgCompParm) {
