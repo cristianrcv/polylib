@@ -12,7 +12,6 @@ EHRHART_BASE =  \
 	alex11.in \
 	alex1.in \
 	bart6.in \
-	bart8.in \
 	c3.in\
 	c4.in\
 	e0.in\
@@ -22,7 +21,6 @@ EHRHART_BASE =  \
 	e13.in\
 	e14.in\
 	e15.in\
-	e16.in\
 	e1.in\
 	e2b.in\
 	e2.in\
@@ -33,7 +31,6 @@ EHRHART_BASE =  \
 	e7.in\
 	e8.in\
 	e9.in\
-	esum.in \
 	g12.in\
 	g13.in\
 	g14.in\
@@ -41,13 +38,11 @@ EHRHART_BASE =  \
 	g2.in\
 	g4.in\
 	g5.in\
-	isnm2.in\
 	t1.in\
 	t2.in\
 	t31.in\
 	t3.in\
 	t4.in\
-	t12.in\
 	tpar.in
 
 EHRHART_EXTRA=bart8.in isnm2.in e16.in esum.in t12.in
