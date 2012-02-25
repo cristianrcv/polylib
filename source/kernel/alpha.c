@@ -27,10 +27,6 @@
               Copyright 1995,1996 by BYU, Provo, Utah
                          all rights reserved.
 
-          Permission is granted to copy, use, and distribute
-          for any commercial or noncommercial purpose under the terms
-          of the GNU General Public license, version 2, June 1991
-          (see file : LICENSING).
 */
 
 #include <stdio.h>

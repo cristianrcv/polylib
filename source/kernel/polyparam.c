@@ -19,10 +19,6 @@
 /*                Parametrized polyhedra V4.20                         */
 /*                copyright 1995-2000 Vincent Loechner                 */
 /*                copyright 1996-1997, Doran Wilde                     */
-/*       Permission is granted to copy, use, and distribute            */
-/*       for any commercial or noncommercial purpose under the terms   */
-/*       of the GNU General Public license, version 2, June 1991       */
-/*       (see file : LICENSING).                                       */
 /***********************************************************************/
 
 /********************* -----------USER #DEFS-------- ***********************/

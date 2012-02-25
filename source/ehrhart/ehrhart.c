@@ -19,10 +19,6 @@
 /*                Ehrhart V4.20                                        */
 /*                copyright 1997, Doran Wilde                          */
 /*                copyright 1997-2000, Vincent Loechner                */
-/*       Permission is granted to copy, use, and distribute            */
-/*       for any commercial or noncommercial purpose under the terms   */
-/*       of the GNU General Public license, version 2, June 1991       */
-/*       (see file : LICENSING).                                       */
 /***********************************************************************/
 
 #include <stdio.h>
