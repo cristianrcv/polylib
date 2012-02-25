@@ -22,10 +22,6 @@
               Copyright 1995,1996 by BYU
                          all rights reserved.
 
-          Permission is granted to copy, use, and distribute
-          for any commercial or noncommercial purpose under the terms
-          of the GNU General Public license, version 2, June 1991
-          (see file : LICENSING).
 
    This file along with polyhedron.c and vector.c do the following functions:
     - Extraction of a minimal set of constraints from some set of constraints

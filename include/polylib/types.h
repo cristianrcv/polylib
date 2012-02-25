@@ -23,10 +23,6 @@
               Copyright 1996,1997,1998, Doran Wilde and Vincent Loechner
               All rights reserved.
 
-          Permission is granted to copy, use, and distribute
-          for any commercial or noncommercial purpose under the terms
-          of the GNU General Public license, version 2, June 1991
-          (see file : LICENSING).
 */
 
 #ifndef _types_polylib_h_
