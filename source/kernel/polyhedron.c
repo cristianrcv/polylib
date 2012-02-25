@@ -4018,7 +4018,7 @@ Polyhedron *Polyhedron_Preimage(Polyhedron *Pol,Matrix *Func,unsigned NbMaxRays)
     Dimension1    = Pol->Dimension+1;	/* Homogeneous Dimension */
     Dimension2    = Func->NbColumns;	/* Homogeneous Dimension */
     if (Dimension1!=(Func->NbRows)) {
-      errormsg1("Polyhedron_Preimage", "dimincomp", "incompatable dimensions");
+      errormsg1("Polyhedron_Preimage", "dimincomp", "incompatible dimensions");
       UNCATCH(any_exception_error);
       return Empty_Polyhedron(Dimension2-1);
     }

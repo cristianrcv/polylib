@@ -876,7 +876,7 @@ void Matrix_Product(Matrix *Mat1,Matrix *Mat2,Matrix *Mat3) {
   
   Size      = Mat1->NbColumns;
   if(Mat2->NbRows!=Size||Mat3->NbRows!=NbRows||Mat3->NbColumns!=NbColumns) {
-    fprintf(stderr, "? Matrix_Product : incompatable matrix dimension\n");
+    fprintf(stderr, "? Matrix_Product : incompatible matrix dimension\n");
     return;
   }     
   value_init(sum); 
