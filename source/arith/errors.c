@@ -193,10 +193,10 @@ typedef struct
 #include <pthread.h>
 #include <assert.h>
 
-pthread_once_t once_control = PTHREAD_ONCE_INIT;
-pthread_key_t mt_key;
+static pthread_once_t once_control = PTHREAD_ONCE_INIT;
+static pthread_key_t mt_key;
 /* (int)exception_index is stored in the last+1 exception stack position */
-#define exception_index (exception_stack[MAX_STACKED_CONTEXTS-1].what)
+#define exception_index (exception_stack[MAX_STACKED_CONTEXTS].what)
 linear_exception_holder *allocate_local_stack(void)
 {
 	linear_exception_holder *exception_stack;
