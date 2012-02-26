@@ -29,6 +29,8 @@
 #include <stdlib.h>
 #include <polylib/polylib.h>
 
+//#define THREAD_SAFE_POLYLIB
+
 #ifdef MAC_OS
   #define abs __abs
 #endif
@@ -765,37 +767,50 @@ static struct {
 } cache[MAX_CACHE_SIZE];
 static int cache_size = 0;
 
+#ifdef THREAD_SAFE_POLYLIB
+#include <pthread.h>
+	pthread_mutex_t cache_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
 Value* value_alloc(int want, int *got)
 {
     int i;
     Value *p;
 
+#ifdef THREAD_SAFE_POLYLIB
+	pthread_mutex_lock(&cache_mutex);
+#endif
     if (cache_size) {
-      int best;
+      int best=0;
       for (i = 0; i < cache_size; ++i) {
-	if (cache[i].size >= want) {
-	  Value *p = cache[i].p;
-	  *got = cache[i].size;
-	  if (--cache_size != i) 
-	    cache[i] = cache[cache_size];
-	  Vector_Set(p, 0, want);
-	  return p;
-	}
-	if (i == 0)
-	  best = 0;
-	else if (cache[i].size > cache[best].size)
-	  best = i;
+        if (cache[i].size >= want) {
+          Value *p = cache[i].p;
+          *got = cache[i].size;
+          if (--cache_size != i) 
+            cache[i] = cache[cache_size];
+#ifdef THREAD_SAFE_POLYLIB
+	pthread_mutex_unlock(&cache_mutex);
+#endif
+          Vector_Set(p, 0, want);
+          return p;
+        }
+        if (cache[i].size > cache[best].size)
+          best = i;
       }
 
       p = (Value *)realloc(cache[best].p, want * sizeof(Value));
       *got = cache[best].size;
       if (--cache_size != best) 
-	cache[best] = cache[cache_size];
+        cache[best] = cache[cache_size];
       Vector_Set(p, 0, *got);
-    } else {
+    }
+    else {
       p = (Value *)malloc(want * sizeof(Value));
       *got = 0;
     }
+#ifdef THREAD_SAFE_POLYLIB
+	pthread_mutex_unlock(&cache_mutex);
+#endif
 
     if (!p)
       return p;
@@ -811,12 +826,21 @@ void value_free(Value *p, int size)
 {
     int i;
 
+#ifdef THREAD_SAFE_POLYLIB
+	pthread_mutex_lock(&cache_mutex);
+#endif
     if (cache_size < MAX_CACHE_SIZE) {
       cache[cache_size].p = p;
       cache[cache_size].size = size;
       ++cache_size;
+#ifdef THREAD_SAFE_POLYLIB
+	pthread_mutex_unlock(&cache_mutex);
+#endif
       return;
     }
+#ifdef THREAD_SAFE_POLYLIB
+	pthread_mutex_unlock(&cache_mutex);
+#endif
 
     for (i=0; i < size; i++)
       value_clear(p[i]);

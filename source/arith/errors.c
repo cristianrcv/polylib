@@ -100,6 +100,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+//#define THREAD_SAFE_POLYLIB
+
 #include "arithmetique.h"
 
 /* global constants to designate exceptions.
@@ -180,13 +182,49 @@ typedef struct
 } 
   linear_exception_holder;
 
+#define MAX_STACKED_CONTEXTS 64
+
+
+/***************************************************/
+/** Vincent's patch to enable POSIX multithreading */
+/** Feb. 2012                                      */
+/***************************************************/
+#ifdef THREAD_SAFE_POLYLIB
+#include <pthread.h>
+#include <assert.h>
+
+pthread_once_t once_control = PTHREAD_ONCE_INIT;
+pthread_key_t mt_key;
+/* (int)exception_index is stored in the last+1 exception stack position */
+#define exception_index (exception_stack[MAX_STACKED_CONTEXTS-1].what)
+linear_exception_holder *allocate_local_stack(void)
+{
+	linear_exception_holder *exception_stack;
+	exception_stack = malloc( sizeof(linear_exception_holder)*(MAX_STACKED_CONTEXTS+1) );
+	assert( exception_stack!=NULL );
+	exception_index = 0;
+	assert( pthread_setspecific( mt_key, exception_stack ) == 0 );
+	return( exception_stack );
+}
+void free_local_stack(void *es)
+{
+	free(es);
+	assert( pthread_setspecific(mt_key, NULL) == 0 );
+}
+void init_multithreaded_stacks(void)
+{
+	pthread_key_create(&mt_key, free_local_stack);
+}
+#else // NO THREAD_SAFE_POLYLIB
+
 /* exception stack.
    maximum extension.
    current index (next available bucket)
  */
-#define MAX_STACKED_CONTEXTS 64
 static linear_exception_holder exception_stack[MAX_STACKED_CONTEXTS];
 static int exception_index = 0;
+
+#endif // THREAD_SAFE_POLYLIB
 
 /* callbacks...
  */
@@ -216,6 +254,12 @@ int linear_number_of_exception_thrown = 0;
 void dump_exception_stack_to_file(FILE * f)
 {
   int i;
+#ifdef THREAD_SAFE_POLYLIB
+	linear_exception_holder *exception_stack;
+	if( (exception_stack = pthread_getspecific( mt_key )) == NULL )
+		exception_stack = allocate_local_stack();
+#endif // THREAD_SAFE_POLYLIB
+
   fprintf(f, "[dump_exception_stack_to_file] size=%d\n", exception_index);
   for (i=0; i<exception_index; i++)
   {
@@ -236,12 +280,11 @@ void dump_exception_stack()
 }
 
 #define exception_debug_message(type) 				  \
-    fprintf(stderr, "%s[%s:%d %s (%d)/%d]\n", 			  \
-	    type, file, line, function, what, exception_index) 
+    fprintf(stderr, "%s[%s:%d %s (%s)/%d]\n", 			  \
+	    type, file, line, function, get_exception_name(what), exception_index) 
 
 #define exception_debug_trace(type) \
     if (linear_exception_debug_mode) { exception_debug_message(type); }
-
 
 /* push a what exception on stack.
  */
@@ -252,7 +295,15 @@ push_exception_on_stack(
     const char * file,
     int line)
 {
+#ifdef THREAD_SAFE_POLYLIB
+	assert(pthread_once(&once_control, init_multithreaded_stacks) == 0);
+	linear_exception_holder *exception_stack;
+	if( (exception_stack = pthread_getspecific( mt_key )) == NULL )
+		exception_stack = allocate_local_stack();
+#endif // THREAD_SAFE_POLYLIB
+
   exception_debug_trace("PUSH ");
+
 
   if (exception_index==MAX_STACKED_CONTEXTS)
   {
@@ -288,6 +339,13 @@ pop_exception_from_stack(
     const char * file,
     int line)
 {  
+#ifdef THREAD_SAFE_POLYLIB
+	assert(pthread_once(&once_control, init_multithreaded_stacks) == 0);
+	linear_exception_holder *exception_stack;
+	if( (exception_stack = pthread_getspecific( mt_key )) == NULL )
+		exception_stack = allocate_local_stack();
+#endif // THREAD_SAFE_POLYLIB
+
   exception_debug_trace("POP  ");
 
   if (exception_index==0)
@@ -333,7 +391,13 @@ void throw_exception(
     int line)
 {
   int i;
-  
+#ifdef THREAD_SAFE_POLYLIB
+	assert(pthread_once(&once_control, init_multithreaded_stacks) == 0);
+	linear_exception_holder *exception_stack;
+	if( (exception_stack = pthread_getspecific( mt_key )) == NULL )
+		exception_stack = allocate_local_stack();
+#endif // THREAD_SAFE_POLYLIB
+
   exception_debug_trace("THROW");
 
   the_last_just_thrown_exception = what; /* for rethrow */
