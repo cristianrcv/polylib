@@ -197,7 +197,7 @@ static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 static pthread_key_t mt_key;
 /* (int)exception_index is stored in the last+1 exception stack position */
 #define exception_index (exception_stack[MAX_STACKED_CONTEXTS].what)
-linear_exception_holder *allocate_local_stack(void)
+static linear_exception_holder *allocate_local_stack(void)
 {
 	linear_exception_holder *exception_stack;
 	exception_stack = malloc( sizeof(linear_exception_holder)*(MAX_STACKED_CONTEXTS+1) );
@@ -206,12 +206,12 @@ linear_exception_holder *allocate_local_stack(void)
 	assert( pthread_setspecific( mt_key, exception_stack ) == 0 );
 	return( exception_stack );
 }
-void free_local_stack(void *es)
+static void free_local_stack(void *es)
 {
 	free(es);
 	assert( pthread_setspecific(mt_key, NULL) == 0 );
 }
-void init_multithreaded_stacks(void)
+static void init_multithreaded_stacks(void)
 {
 	pthread_key_create(&mt_key, free_local_stack);
 }

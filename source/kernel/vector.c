@@ -760,17 +760,53 @@ int Vector_IsZero(Value * v, unsigned length) {
   }
 }
 
-#define MAX_CACHE_SIZE 20
-static struct {
+typedef struct {
   Value *p;
   int 	size;
-} cache[MAX_CACHE_SIZE];
-static int cache_size = 0;
+} cache_holder;
+#define MAX_CACHE_SIZE 20
+
+
+/************************************************/
+/** Vincent's patch for thread safe value cache */
+/** each thread has it's own cache and size.    */
+/** 02/2012                                     */
+/************************************************/
 
 #ifdef THREAD_SAFE_POLYLIB
 #include <pthread.h>
-	pthread_mutex_t cache_mutex = PTHREAD_MUTEX_INITIALIZER;
-#endif
+#include <assert.h>
+
+
+static pthread_once_t once_cache = PTHREAD_ONCE_INIT;
+static pthread_key_t cache_key;
+/* cache_size is stored in the last+1 cache position */
+#define cache_size (cache[MAX_CACHE_SIZE].size)
+
+static cache_holder *allocate_local_cache(void)
+{
+	cache_holder *cache;
+	cache = malloc( sizeof(cache_holder)*(MAX_CACHE_SIZE+1) );
+	assert( cache!=NULL );
+	cache_size = 0;
+	assert( pthread_setspecific( cache_key, cache ) == 0 );
+	return( cache );
+}
+static void free_local_cache(void *c)
+{
+	free(c);
+	assert( pthread_setspecific(cache_key, NULL) == 0 );
+}
+static void init_value_caches(void)
+{
+	pthread_key_create(&cache_key, free_local_cache);
+}
+
+#else
+cache_holder cache[MAX_CACHE_SIZE];
+static int cache_size = 0;
+#endif // THREAD_SAFE_POLYLIB
+
 
 Value* value_alloc(int want, int *got)
 {
@@ -778,8 +814,12 @@ Value* value_alloc(int want, int *got)
     Value *p;
 
 #ifdef THREAD_SAFE_POLYLIB
-	pthread_mutex_lock(&cache_mutex);
-#endif
+	assert(pthread_once(&once_cache, init_value_caches) == 0);
+	cache_holder *cache;
+	if( (cache = pthread_getspecific( cache_key )) == NULL )
+		cache = allocate_local_cache();
+#endif // THREAD_SAFE_POLYLIB
+
     if (cache_size) {
       int best=0;
       for (i = 0; i < cache_size; ++i) {
@@ -788,9 +828,6 @@ Value* value_alloc(int want, int *got)
           *got = cache[i].size;
           if (--cache_size != i) 
             cache[i] = cache[cache_size];
-#ifdef THREAD_SAFE_POLYLIB
-	pthread_mutex_unlock(&cache_mutex);
-#endif
           Vector_Set(p, 0, want);
           return p;
         }
@@ -808,9 +845,6 @@ Value* value_alloc(int want, int *got)
       p = (Value *)malloc(want * sizeof(Value));
       *got = 0;
     }
-#ifdef THREAD_SAFE_POLYLIB
-	pthread_mutex_unlock(&cache_mutex);
-#endif
 
     if (!p)
       return p;
@@ -827,20 +861,20 @@ void value_free(Value *p, int size)
     int i;
 
 #ifdef THREAD_SAFE_POLYLIB
-	pthread_mutex_lock(&cache_mutex);
-#endif
+/* suppose alloc before free :) */
+//	assert(pthread_once(&once_cache, init_value_caches) == 0);
+	cache_holder *cache;
+//	if( (cache = pthread_getspecific( cache_key )) == NULL )
+//		cache = allocate_local_cache();
+	assert( (cache = pthread_getspecific( cache_key )) != NULL );
+#endif // THREAD_SAFE_POLYLIB
+
     if (cache_size < MAX_CACHE_SIZE) {
       cache[cache_size].p = p;
       cache[cache_size].size = size;
       ++cache_size;
-#ifdef THREAD_SAFE_POLYLIB
-	pthread_mutex_unlock(&cache_mutex);
-#endif
       return;
     }
-#ifdef THREAD_SAFE_POLYLIB
-	pthread_mutex_unlock(&cache_mutex);
-#endif
 
     for (i=0; i < size; i++)
       value_clear(p[i]);
