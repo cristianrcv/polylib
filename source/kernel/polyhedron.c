@@ -1067,9 +1067,9 @@ static Polyhedron *Remove_Redundants(Matrix *Mat,Matrix *Ray,SatMatrix *Sat,unsi
       if (value_cmp_si(Mat->p[i][0], NbRay) != 0) {
 	
 	/* Skip over inequalities and find an equality */
-	for (k=i+1; value_cmp_si(Mat->p[k][0], NbRay) != 0 && k < NbConstraints; k++)
+	for (k=i+1; k < NbConstraints && value_cmp_si(Mat->p[k][0], NbRay) != 0 ; k++)
 	  ;
-	if (k==NbConstraints) /* If none found then error */ break;
+	if (k>=NbConstraints) /* If none found then error */ break;
 	
 	/* Slide inequalities down the array 'Mat' and move equality up to */
 	/* position 'i'.                                                   */
