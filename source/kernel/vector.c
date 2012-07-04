@@ -29,7 +29,9 @@
 #include <stdlib.h>
 #include <polylib/polylib.h>
 
-//#define THREAD_SAFE_POLYLIB
+
+/* defined by configure script */
+/* #define THREAD_SAFE_POLYLIB */
 
 #ifdef MAC_OS
   #define abs __abs

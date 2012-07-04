@@ -100,7 +100,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#define THREAD_SAFE_POLYLIB
+/* defined by configure script */
+/* #define THREAD_SAFE_POLYLIB */
 
 #include "arithmetique.h"
 

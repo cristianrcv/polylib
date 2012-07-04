@@ -23,4 +23,6 @@ extern Enumeration *Domain_Enumerate(Polyhedron *D, Polyhedron *C,
 
 extern void new_eadd (evalue *e1,evalue *res);
 
+extern void Scalar_product(Value *p1,Value *p2,unsigned length, Value *r);
+
 #endif
