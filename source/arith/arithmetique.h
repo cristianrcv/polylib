@@ -329,7 +329,7 @@ typedef cln::cl_I Value;
 #define value_abs_le(v1,v2) (cln::abs(v1)<=cln::abs(v2))
 
 #define value_sign(val)      (cln::signum(val))
-#define value_compare(v1,v2) (cln::compare((v1),(v2)))
+#define value_cmp(v1,v2) (cln::compare((v1),(v2)))
 
 #define value_addto(ref,val1,val2) 	((ref) = (val1)+(val2))
 #define value_add_int(ref,val,vint)     ((ref) = (val)+(vint))
@@ -406,7 +406,7 @@ typedef void (*value_print_gmp_free_t)(void *, size_t);
 /* Trian operators on 'Value' */
 
 #define value_sign(val)      (mpz_sgn(val))
-#define value_compare(v1,v2) (mpz_cmp((v1),(v2)))
+#define value_cmp(v1,v2) (mpz_cmp((v1),(v2)))
 
 /* Binary operations on 'Value' */
 
@@ -491,7 +491,7 @@ typedef void (*value_print_gmp_free_t)(void *, size_t);
 /* Trian operators on 'Value' */
 
 #define value_sign(v) (value_eq(v,VALUE_ZERO)?0:value_lt(v,VALUE_ZERO)?-1:1)
-#define value_compare(v1,v2) (value_eq(v1,v2)?0:value_lt(v1,v2)?-1:1)
+#define value_cmp(v1,v2) (value_eq(v1,v2)?0:value_lt(v1,v2)?-1:1)
 
 /* Binary operators on 'Value' */
 
