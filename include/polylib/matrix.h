@@ -26,7 +26,7 @@ extern Matrix *Matrix_Alloc(unsigned NbRows, unsigned NbColumns);
 extern void Matrix_Free(Matrix *Mat);
 extern void Matrix_Extend(Matrix *Mat, unsigned NbRows);
 extern void Matrix_Print(FILE * Dst, const char *Format, Matrix *Mat);
-extern void Matrix_Read_Input(Matrix *Mat);
+extern Matrix *Matrix_Read_Input(Matrix *Mat);
 extern Matrix *Matrix_Read(void);
 extern void right_hermite(Matrix *A,Matrix **Hp,Matrix **Up,Matrix
 			  **Qp);

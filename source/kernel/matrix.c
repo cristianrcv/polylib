@@ -42,7 +42,7 @@ Matrix *Matrix_Alloc(unsigned NbRows,unsigned NbColumns) {
   
   Matrix *Mat;
   Value *p, **q;
-  int i,j;
+  int i;
 
   Mat=(Matrix *)malloc(sizeof(Matrix));
   if(!Mat) {	
@@ -99,7 +99,7 @@ void Matrix_Free(Matrix *Mat)
 void Matrix_Extend(Matrix *Mat, unsigned NbRows)
 {
   Value *p, **q;
-  int i,j;
+  int i;
 
   q = (Value **)realloc(Mat->p, NbRows * sizeof(*q));
   if(!q) {
@@ -156,68 +156,73 @@ void Matrix_Print(FILE *Dst, const char *Format, Matrix *Mat)
   }
 } /* Matrix_Print */
 
-/* used in Matrix_Read_Input */
-void skip_to_eol()
-{
-	while(1)
-	{
-		int r=getc(stdin);
-		if(r==EOF)
-		{
-			errormsg1("Matrix_Read,skip_to_eol()", "bad dim", "not enough data");
-			break;
-		}
-		if( (r==0) || (r==(int)'\n') )
-			break;
-	}
-}
 /* 
  * Read the contents of the Matrix 'Mat' 
- *  spaces followed by # treated as comment
- *  empty lines skipped
  */
-void Matrix_Read_Input(Matrix *Mat) 
-{
- int i,j,doit,numbers_wanted,cols;
- char* s; char* c; char c0;
- Value *p = Mat->p_Init;
- cols=Mat->NbColumns;
- for (i=0;i<Mat->NbRows;i++)
-  {
-   numbers_wanted=cols;
-   while(numbers_wanted)
+Matrix *Matrix_Read_Input(Matrix *Mat) {
+  
+  Value *p;
+  int i,j,n;
+  char *c, s[1024];
+  
+  p = Mat->p_Init;
+  for (i=0;i<Mat->NbRows;i++) {
+    do
     {
-     int r=scanf("%ms",&s);
-     if(r!=1)
-      errormsg1("Matrix_Read", "baddim", "not enough data");
-     c=s;
-     while( (c0=*c) && isspace(c0) && (c0!='\n') )
-      ++c;
-     doit=1;
-     switch(c0)
-      {
-       case '#' :  // we only come here at start of line, for correct input
-                   assert(numbers_wanted==cols);
-                   skip_to_eol(); // no break required here
-       case  0   : ;
-       case '\n' : doit=0;
-      }
-     if(doit)
-      {
-       value_read(*(p++),s);
-       //fprintf(stderr,"line %d number %s\n",i,s);
-       numbers_wanted -= 1;
-      }
-     free(s);
+      c = fgets(s, 1024, stdin);
+      if( !c )
+        break;
+      /* jump to the first non space char */
+      while(isspace(*c) && *c!='\n' && *c)
+        ++c;
     }
-   skip_to_eol();
+    while(*c =='#' || *c== '\n');	/* continue if the line is empty or is a comment */
+    if (!c) {
+      errormsg1( "Matrix_Read", "baddim", "not enough rows" );
+      return(NULL);
+    }
+
+    if( c-s >= 1023 )
+    {
+      /* skip to EOL and ignore the rest of the line if longer than 1024 */
+      errormsg1( "Matrix_Read", "warning", "line longer than 1024 chars (ignored remaining chars till EOL)" );
+      do
+        n = getchar();
+      while( n!=EOF && n!='\n' );
+    }
+
+    
+    for (j=0;j<Mat->NbColumns;j++)
+    {
+      char *z;
+      if(*c=='\n' || *c=='#' || *c=='\0') {
+        errormsg1("Matrix_Read", "baddim", "not enough columns");
+        return(NULL);
+      }
+      /* go the the next space or end */
+      for( z=c ; *z ; z++ )
+      {
+        if( *z=='\n' || *z=='#' || isspace(*z) )
+          break;
+      }
+      if( *z )
+        *z = '\0';
+      else
+        z--; /* hit EOL :/ go back one char */
+      value_read(*(p++),c);
+      /* go point to the next non space char */
+      c = z+1;
+      while( isspace(*c) )
+        c++;
+    }
   }
+  return( Mat );
 } /* Matrix_Read_Input */
 
 
 /* 
  * Read the contents of the matrix 'Mat' from standard input. 
- * A '#' in the first column is a comment line 
+ * a '#' is a comment (till EOL)
  */
 Matrix *Matrix_Read(void) {
   
@@ -237,7 +242,11 @@ Matrix *Matrix_Read(void) {
     errormsg1("Matrix_Read", "outofmem", "out of memory space");
     return(NULL);
   }
-  Matrix_Read_Input(Mat);
+  if( !Matrix_Read_Input(Mat) )
+  {
+    Matrix_Free(Mat);
+    Mat=NULL;
+  }
   return Mat;
 } /* Matrix_Read */
 
@@ -454,7 +463,7 @@ static int hermite(Matrix *H,Matrix *U,Matrix *Q) {
 void right_hermite(Matrix *A,Matrix **Hp,Matrix **Up,Matrix **Qp) {
   
   Matrix *H, *Q, *U;
-  int i, j, nr, nc, rank;
+  int i, j, nr, nc;
   Value tmp;
   
   /* Computes form: A = QH , UA = H */  
@@ -504,7 +513,7 @@ void right_hermite(Matrix *A,Matrix **Hp,Matrix **Up,Matrix **Qp) {
   else
     Q = (Matrix *)0;
   
-  rank = hermite(H,U,Q);
+  hermite(H,U,Q);
   
   /* Q is returned transposed */ 
   /* Transpose Q */
@@ -524,7 +533,7 @@ void right_hermite(Matrix *A,Matrix **Hp,Matrix **Up,Matrix **Qp) {
 void left_hermite(Matrix *A,Matrix **Hp,Matrix **Qp,Matrix **Up) {
   
   Matrix *H, *HT, *Q, *U;
-  int i, j, nc, nr, rank;
+  int i, j, nc, nr;
   Value tmp;
   
   /* Computes left form: A = HQ , AU = H , 
@@ -572,7 +581,7 @@ void left_hermite(Matrix *A,Matrix **Hp,Matrix **Qp,Matrix **Up) {
       value_set_si(Q->p[i][i],1);
   }
   else Q=(Matrix *)0;
-  rank = hermite(HT,U,Q);
+  hermite(HT,U,Q);
   
   /* H = HT transpose */
   *Hp = H = Matrix_Alloc(nr,nc);
@@ -739,18 +748,17 @@ void rat_prodmat(Matrix *S,Matrix *X,Matrix *P) {
   
   int i,j,k;
   int last_column_index = P->NbColumns - 1;
-  Value lcm, old_lcm,gcd,last_column_entry,s1;
+  Value lcm, gcd,last_column_entry,s1;
   Value m1,m2;
   
   /* Initialize all the 'Value' variables */
-  value_init(lcm); value_init(old_lcm); value_init(gcd);
+  value_init(lcm); value_init(gcd);
   value_init(last_column_entry); value_init(s1); 
   value_init(m1); value_init(m2);
 
   /* Compute the LCM of last column entries (denominators) of rows */
   value_assign(lcm,P->p[0][last_column_index]);	
   for(k=1;k<P->NbRows;++k) {
-    value_assign(old_lcm,lcm);
     value_assign(last_column_entry,P->p[k][last_column_index]);
     value_gcd(gcd, lcm, last_column_entry);
     value_divexact(m1, last_column_entry, gcd);
@@ -790,7 +798,7 @@ void rat_prodmat(Matrix *S,Matrix *X,Matrix *P) {
   }
   
   /* Clear all the 'Value' variables */
-  value_clear(lcm); value_clear(old_lcm); value_clear(gcd);
+  value_clear(lcm); value_clear(gcd);
   value_clear(last_column_entry); value_clear(s1); 
   value_clear(m1); value_clear(m2);
  
@@ -931,7 +939,7 @@ int Matrix_Inverse(Matrix *Mat,Matrix *MatInv ) {
   /* also set to 1.                                                         */ 
   for(i=0;i<k;++i) {
     value_set_si(MatInv->p[i][i],1);	
-    /* value_set_si(MatInv->p[i][k],1);	/* denum */
+    /* value_set_si(MatInv->p[i][k],1);	// denum */
   }  
   /* Apply Gauss-Jordan elimination method on the two matrices 'Mat' and  */
   /* 'MatInv' in parallel.                                                */
