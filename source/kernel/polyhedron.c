@@ -2911,8 +2911,16 @@ static void FindSimple(Polyhedron *P1,Polyhedron *P2,unsigned *Filter,unsigned N
   value_init(tmp);
  
   CATCH(any_exception_error) {
-    if (tmpC) free(tmpC);
-    if (tmpR) free(tmpR);
+    if (tmpC) {
+      for(i=0;i<NbConstraints;i++)
+        value_clear(tmpC[i]);
+      free(tmpC);
+    }
+    if (tmpR) {
+      for(i=0;i<NbRays;i++)
+        value_clear(tmpR[i]);
+      free(tmpR);
+    }
     if (Mat) Matrix_Free(Mat);
     if (Sat) SMFree(&Sat);
     if (Pol2 && Pol2!=P2) Polyhedron_Free(Pol2);
@@ -3089,7 +3097,11 @@ static void FindSimple(Polyhedron *P1,Polyhedron *P2,unsigned *Filter,unsigned N
 	}
       }
       SMFree(&Sat), Sat = NULL;
+      for(i=0;i<NbConstraints;i++)
+        value_clear(tmpC[i]);
       free(tmpC), tmpC = NULL;
+      for(i=0;i<NbRays;i++)
+        value_clear(tmpR[i]);
       free(tmpR), tmpR = NULL;
     }   
   } /* end of TRY */
@@ -3097,11 +3109,11 @@ static void FindSimple(Polyhedron *P1,Polyhedron *P2,unsigned *Filter,unsigned N
   /* Clear all the 'Value' variables */
   value_clear(p3); value_clear(NbConstraintsLeft);
   value_clear(tmp);
-  for(i=0;i<NbRays;i++)
-    value_clear(tmpR[i]);
-  for(i=0;i<NbRays;i++)
-    value_clear(tmpC[i]);
-  
+/*  for(i=0;i<NbRays;i++)
+      value_clear(tmpR[i]);
+    for(i=0;i<NbRays;i++)
+      value_clear(tmpC[i]);
+*/
   UNCATCH(any_exception_error);
 } /* FindSimple */
 
