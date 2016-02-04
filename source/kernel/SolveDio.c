@@ -146,6 +146,9 @@ int SolveDiophantine(Matrix *M, Matrix **U, Vector **X) {
     if (value_notzero_p(tmp)) { /* no solution to the equation */
       *U = Matrix_Alloc(0,0);
       *X = Vector_Alloc (0);
+      Matrix_Free (unimod);
+      Matrix_Free (hermi);
+      Matrix_Free (temp);
       value_clear(sum); value_clear(tmp);
       for (i = 0; i < k1; i++) 
 	value_clear(C[i]);
@@ -176,6 +179,9 @@ int SolveDiophantine(Matrix *M, Matrix **U, Vector **X) {
     if (value_ne(sum,C[i])) {
       *U = Matrix_Alloc(0,0);
       *X = Vector_Alloc (0);
+      Matrix_Free (unimod);
+      Matrix_Free (hermi);
+      Matrix_Free (temp);
       value_clear(sum); value_clear(tmp);
       for (i = 0; i < k1; i++) 
 	value_clear(C[i]);
@@ -185,7 +191,7 @@ int SolveDiophantine(Matrix *M, Matrix **U, Vector **X) {
       free(T);
       return (-1);
     }
-  }     
+  }
   unimodinv = Matrix_Alloc(unimod->NbRows, unimod->NbColumns);
   Matrix_Inverse(unimod, unimodinv);
   Matrix_Free(unimod);
