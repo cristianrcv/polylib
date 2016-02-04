@@ -2998,7 +2998,7 @@ static void FindSimple(Polyhedron *P1,Polyhedron *P2,unsigned *Filter,unsigned N
 	UNCATCH(any_exception_error);
 	
 	/* Clear all the 'Value' variables */
-	value_clear(p3); value_clear(NbConstraintsLeft);
+	value_clear(p3); value_clear(NbConstraintsLeft); value_clear(tmp);  
 	for(i=0;i<NbRays;i++)
 	  value_clear(tmpR[i]);
 	free(tmpR);
