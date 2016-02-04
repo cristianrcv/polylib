@@ -42,6 +42,11 @@
 
 #define maxRays 200
 
+int test_Constraints_Remove_parm_eqs(Matrix * A, Matrix * B);
+int test_Polyhedron_Remove_parm_eqs(Matrix * A, Matrix * B);
+int test_Constraints_fullDimensionize(Matrix * A, Matrix * B, 
+				      unsigned int nbSamples);
+
 const char *origNames[] =
 	{"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
 
